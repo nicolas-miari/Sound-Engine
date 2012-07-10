@@ -44,9 +44,9 @@ static AURenderCallbackStruct inputCallbackStructArray[MAX_CONCURRENT_SOUNDS];
 
 // Forward Decls 
 void audioRouteChangeListenerCallback (void*                  inUserData,
-									   AudioSessionPropertyID inPropertyID,
-									   UInt32                 inPropertyValueSize,
-									   const void*            inPropertyValue);
+                                       AudioSessionPropertyID inPropertyID,
+                                       UInt32                 inPropertyValueSize,
+                                       const void*            inPropertyValue);
 
 
 #pragma mark - C Audio Callbacks
@@ -55,13 +55,13 @@ void audioRouteChangeListenerCallback (void*                  inUserData,
 
 #pragma mark Render Callback 
 
-static OSStatus auRenderCallback ( void*                       inRefCon,
-								  AudioUnitRenderActionFlags*  ioActionFlags,
-								  const AudioTimeStamp*        inTimeStamp,
-								  UInt32                       inBusNumber,
-								  UInt32                       inNumberFrames,
-								  AudioBufferList*             ioData
-								  )
+
+static OSStatus auRenderCallback (void*                        inRefCon,
+                                  AudioUnitRenderActionFlags*  ioActionFlags,
+                                  const AudioTimeStamp*        inTimeStamp,
+                                  UInt32                       inBusNumber,
+                                  UInt32                       inNumberFrames,
+                                  AudioBufferList*             ioData)
 {
 	/*
 	 *	@ Description
@@ -76,26 +76,29 @@ static OSStatus auRenderCallback ( void*                       inRefCon,
 		return noErr;
 	}
 	
-	SoundData*	   data          = soundInstance->data;
+	SoundData* data = soundInstance->data;
 	
 	if (!data) {
 		return noErr;
 	}
 	
 	UInt32 frameTotalForSound = data->frameCount;
-	BOOL   isStereo			  = data->isStereo;
+	BOOL   isStereo           = data->isStereo;
 	
-	AudioUnitSampleType*	dataInLeft;
-	AudioUnitSampleType*	dataInRight;
+	AudioUnitSampleType* dataInLeft;
+	AudioUnitSampleType* dataInRight;
 	
-	dataInLeft                = data->audioDataLeft;
-	if (isStereo) dataInRight = data->audioDataRight;
+	dataInLeft = data->audioDataLeft;
 	
-	AudioUnitSampleType*	outSamplesChannelLeft;
-	AudioUnitSampleType*	outSamplesChannelRight;
+    if (isStereo){
+        dataInRight = data->audioDataRight;
+	}
+
+	AudioUnitSampleType* outSamplesChannelLeft;
+	AudioUnitSampleType* outSamplesChannelRight;
 	
-	outSamplesChannelLeft			     = (AudioUnitSampleType*) ioData->mBuffers[0].mData;
-	outSamplesChannelRight               = (AudioUnitSampleType*) ioData->mBuffers[1].mData;
+	outSamplesChannelLeft  = (AudioUnitSampleType*) ioData->mBuffers[0].mData;
+	outSamplesChannelRight = (AudioUnitSampleType*) ioData->mBuffers[1].mData;
 	
 	if (dataInLeft == NULL || soundInstance->playing == NO) {
 		
@@ -124,6 +127,7 @@ static OSStatus auRenderCallback ( void*                       inRefCon,
 		 *	STEREO
 		 */
 		for(UInt32 frameNumber = 0; frameNumber < inNumberFrames; ++frameNumber){
+            
 			outSamplesChannelLeft [frameNumber] = dataInLeft [sampleNumber];
 			outSamplesChannelRight[frameNumber] = dataInRight[sampleNumber];
 			
@@ -191,9 +195,7 @@ static OSStatus auRenderCallback ( void*                       inRefCon,
 		 */
 		soundInstance->sample = 0;
 		
-		AUGraphDisconnectNodeInput(processingGraph, 
-								   mixerNode, 
-								   inBusNumber);
+		AUGraphDisconnectNodeInput(processingGraph, mixerNode, inBusNumber);
 		
 		if (data->usageCount > 0) {
 			data->usageCount -= 1;
@@ -208,6 +210,7 @@ static OSStatus auRenderCallback ( void*                       inRefCon,
 
 #pragma mark Audio Route Change Listener Callback
 
+
 /* 
  *	Audio session callback function for responding to audio route changes. 
  *	If playing back audio and the user unplugs a headset or headphones, or 
@@ -216,11 +219,10 @@ static OSStatus auRenderCallback ( void*                       inRefCon,
  *	Refer to AudioSessionPropertyListener in Audio Session Services Reference.
  */
 void audioRouteChangeListenerCallback (void*                  inUserData,
-									   AudioSessionPropertyID inPropertyID,
-									   UInt32                 inPropertyValueSize,
-									   const void*            inPropertyValue) 
+                                       AudioSessionPropertyID inPropertyID,
+                                       UInt32                 inPropertyValueSize,
+                                       const void*            inPropertyValue) 
 {
-    
     // Ensure that this callback was invoked because of an audio route change
     if (inPropertyID != kAudioSessionProperty_AudioRouteChange) return;
 	
@@ -233,12 +235,13 @@ void audioRouteChangeListenerCallback (void*                  inUserData,
     TTSoundEngine *audioObject = (__bridge TTSoundEngine*) inUserData;
     
     // if application sound is not playing, there's nothing to do, so return.
-    if (audioObject.isPlaying == NO) {
+    if (audioObject.isPlaying == NO){
 		
         NSLog(@"Audio route change while application audio is stopped.");
         return;
         
-    } else {
+    }
+    else{
 		
         /*
 		 *	Determine the specific type of audio route change that occurred.
@@ -246,16 +249,13 @@ void audioRouteChangeListenerCallback (void*                  inUserData,
         CFDictionaryRef routeChangeDictionary = inPropertyValue;
         
         CFNumberRef routeChangeReasonRef =
-		CFDictionaryGetValue (routeChangeDictionary,
-							  CFSTR (kAudioSession_AudioRouteChangeKey_Reason)
-							  );
+		
+        CFDictionaryGetValue(routeChangeDictionary,
+                             CFSTR (kAudioSession_AudioRouteChangeKey_Reason));
 		
         SInt32 routeChangeReason;
         
-        CFNumberGetValue (routeChangeReasonRef,
-						  kCFNumberSInt32Type,
-						  &routeChangeReason
-						  );
+        CFNumberGetValue (routeChangeReasonRef, kCFNumberSInt32Type, &routeChangeReason);
         
         /* 
 		 *	"Old device unavailable" indicates that a headset or headphones were 
@@ -263,13 +263,14 @@ void audioRouteChangeListenerCallback (void*                  inUserData,
 		 *	supports audio output. In such a case, pause or stop audio (as advised 
 		 *	by the iOS Human Interface Guidelines).
 		 */
-        if (routeChangeReason == kAudioSessionRouteChangeReason_OldDeviceUnavailable) {
+        if (routeChangeReason == kAudioSessionRouteChangeReason_OldDeviceUnavailable){
 			
             NSLog(@"Audio output device was removed; stopping audio playback.");
             NSString *MixerHostAudioObjectPlaybackStateDidChangeNotification = @"MixerHostAudioObjectPlaybackStateDidChangeNotification";
             [[NSNotificationCenter defaultCenter] postNotificationName: MixerHostAudioObjectPlaybackStateDidChangeNotification object: audioObject]; 
 			
-        } else {
+        }
+        else{
             NSLog(@"A route change occurred that does not require stopping application audio.");
         }
     }
@@ -283,9 +284,13 @@ void audioRouteChangeListenerCallback (void*                  inUserData,
 @interface TTSoundEngine (Private)
 
 - (void) initEngine;
-- (void) printErrorMessage: (NSString *) errorString withStatus: (OSStatus) result;
 
-- (void) setMixerInput:(UInt32)inputBus gain:(AudioUnitParameterValue)newGain;
+- (void) printErrorMessage: (NSString *) errorString 
+                withStatus: (OSStatus) result;
+
+- (void) setMixerInput:(UInt32)inputBus 
+                  gain:(AudioUnitParameterValue)newGain;
+
 - (void) cleanUpBusNo:(uint) busNumber;
 
 @end
@@ -317,11 +322,9 @@ void audioRouteChangeListenerCallback (void*                  inUserData,
 		 *	Initialize Arrays
 		 */
 		
-		
 		for (NSUInteger i=0; i < MAX_FILES_IN_MEMORY; i++) {
 			
 			loadedSoundPtrArray[i] = (SoundData*) calloc(1, sizeof(SoundData));
-			
 		}
 		
 		for (NSUInteger i=0; i < MAX_CONCURRENT_SOUNDS; i++) {
@@ -356,16 +359,28 @@ void audioRouteChangeListenerCallback (void*                  inUserData,
 		[session setDelegate:self];
 		
 		graphSampleRate = 44100.0; // [Hertz]
-		[session setPreferredHardwareSampleRate:graphSampleRate error:&audioSessionError];
-		if (audioSessionError) { NSLog(@"Error Setting Audio Session Preferred Hardware Smple Rate"); return;}
+		
+        [session setPreferredHardwareSampleRate:graphSampleRate error:&audioSessionError];
+		
+        if (audioSessionError){ 
+            NSLog(@"Error Setting Audio Session Preferred Hardware Smple Rate"); 
+            return;
+        }
 
 		//[session setCategory:AVAudioSessionCategoryPlayback error:&audioSessionError];
 		[session setCategory:AVAudioSessionCategoryAmbient error:&audioSessionError];
 		
-        if (audioSessionError) { NSLog(@"Error Setting Audio Session Category"); return;}
+        if (audioSessionError){ 
+            NSLog(@"Error Setting Audio Session Category"); 
+            return;
+        }
 		
 		[session setActive:YES error:&audioSessionError];
-		if (audioSessionError) { NSLog(@"Error Setting Audio Session Active"); return;}
+		
+        if (audioSessionError){ 
+            NSLog(@"Error Setting Audio Session Active"); 
+            return;
+        }
 		
 		graphSampleRate = [session currentHardwareSampleRate];
 		
@@ -378,13 +393,14 @@ void audioRouteChangeListenerCallback (void*                  inUserData,
         propertySetError = AudioSessionSetProperty(kAudioSessionProperty_PreferredHardwareIOBufferDuration, sizeof(preferredBufferDuration), &preferredBufferDuration);
         // TEST
         
-		if (audioSessionError && propertySetError) { NSLog(@"Error Setting Audio Session Preferred IO Buffer Duration"); return;}
+		if (audioSessionError && propertySetError){ 
+            NSLog(@"Error Setting Audio Session Preferred IO Buffer Duration"); 
+            return;
+        }
 
-		AudioSessionAddPropertyListener(
-					kAudioSessionProperty_AudioRouteChange, 
-					audioRouteChangeListenerCallback, 
-					self);
-		
+		AudioSessionAddPropertyListener(kAudioSessionProperty_AudioRouteChange, 
+		                                audioRouteChangeListenerCallback, 
+		                                self);
 		
 		// .....................................................................
 		// [ 2 ] Setup MONO and STEREO Stream Formats
@@ -429,7 +445,10 @@ void audioRouteChangeListenerCallback (void*                  inUserData,
 		 */
 		result = NewAUGraph(&processingGraph);
 		
-		if (result != noErr) {[self printErrorMessage: @"NewAUGraph" withStatus: result]; return;}
+		if (result != noErr){
+            [self printErrorMessage: @"NewAUGraph" withStatus: result]; 
+            return;
+        }
 		
 		
 		/*
@@ -442,7 +461,7 @@ void audioRouteChangeListenerCallback (void*                  inUserData,
 		ioUnitDescription.componentType         = kAudioUnitType_Output;
 		ioUnitDescription.componentSubType      = kAudioUnitSubType_RemoteIO;
 		ioUnitDescription.componentManufacturer = kAudioUnitManufacturer_Apple;
-		ioUnitDescription.componentFlags	    = 0;
+		ioUnitDescription.componentFlags        = 0;
 		ioUnitDescription.componentFlagsMask    = 0;
 		
 		// Multichannel Mixer Unit		
@@ -450,7 +469,7 @@ void audioRouteChangeListenerCallback (void*                  inUserData,
 		mixerUnitDescription.componentType         = kAudioUnitType_Mixer;
 		mixerUnitDescription.componentSubType      = kAudioUnitSubType_MultiChannelMixer;
 		mixerUnitDescription.componentManufacturer = kAudioUnitManufacturer_Apple;
-		mixerUnitDescription.componentFlags		   = 0;
+		mixerUnitDescription.componentFlags        = 0;
 		mixerUnitDescription.componentFlagsMask    = 0;
 		
 		/*
@@ -459,20 +478,19 @@ void audioRouteChangeListenerCallback (void*                  inUserData,
 
 		AUNode ioNode;
 		
-		result = AUGraphAddNode(
-						processingGraph, 
-						&ioUnitDescription, 
-						&ioNode);
+		result = AUGraphAddNode(processingGraph, &ioUnitDescription, &ioNode);
 		
-		if (result != noErr) {[self printErrorMessage: @"AUGraphNewNode failed for I/O unit" withStatus: result]; return;}
+		if (result != noErr){
+            [self printErrorMessage: @"AUGraphNewNode failed for I/O unit" withStatus: result]; 
+            return;
+        }
 		
+		result = AUGraphAddNode(processingGraph, &mixerUnitDescription, &mixerNode);
 		
-		result = AUGraphAddNode(
-						processingGraph, 
-						&mixerUnitDescription, 
-						&mixerNode);
-		
-		if (result != noErr) {[self printErrorMessage: @"AUGraphNewNode failed for Mixer unit" withStatus: result]; return;}
+		if (result != noErr){
+            [self printErrorMessage: @"AUGraphNewNode failed for Mixer unit" withStatus: result];
+            return;
+        }
 		
 		/*
 		 *	Open the Audio Processing Graph. 
@@ -482,37 +500,43 @@ void audioRouteChangeListenerCallback (void*                  inUserData,
 		 */
 		result = AUGraphOpen(processingGraph);
 		
-		if (result != noErr) {[self printErrorMessage: @"AUGraphOpen" withStatus: result]; return;}
+		if (result != noErr){
+            [self printErrorMessage: @"AUGraphOpen" withStatus: result]; 
+            return;
+        }
 		
 		/*
 		 *	Obtain mixer unit instance from its corresponding node.
 		 */
 		
-		result = AUGraphNodeInfo(
-					processingGraph, 
-					mixerNode, 
-					NULL, 
-					&mixerUnit
-				 );
+		result = AUGraphNodeInfo(processingGraph, 
+                                 mixerNode, 
+                                 NULL, 
+                                 &mixerUnit);
 		
-		if (result != noErr) {[self printErrorMessage: @"AUGraphNodeInfo" withStatus: result]; return;}
+		if (result != noErr){
+            [self printErrorMessage: @"AUGraphNodeInfo" withStatus: result]; 
+            return;
+        }
 		
 		// .....................................................................
 		// Multichannel Mixer unit Setup
 		
-		UInt32	busCount  = MAX_CONCURRENT_SOUNDS;
+		UInt32	busCount = MAX_CONCURRENT_SOUNDS;
 		
 		// Number of Buses (Stereo Channels in the Mixer)
 		
 		result = AudioUnitSetProperty(mixerUnit, 
-									  kAudioUnitProperty_ElementCount, 
-									  kAudioUnitScope_Input, 
-									  0, 
-									  &busCount, 
-									  sizeof(busCount)
-									  );
+		                              kAudioUnitProperty_ElementCount, 
+		                              kAudioUnitScope_Input, 
+		                              0, 
+		                              &busCount, 
+		                              sizeof(busCount));
 		
-		if (result != noErr) {[self printErrorMessage: @"AudioUnitSetProperty (set mixer unit bus count)" withStatus: result]; return;}
+		if (result != noErr){
+            [self printErrorMessage: @"AudioUnitSetProperty (set mixer unit bus count)" withStatus: result]; 
+            return;
+        }
 
 		/*
 		 *	Increase the maximum frames per slice allows the mixer unit to 
@@ -522,14 +546,16 @@ void audioRouteChangeListenerCallback (void*                  inUserData,
 		UInt32 maximumFramesPerSlice = 4096;
 		
 		result = AudioUnitSetProperty(mixerUnit, 
-									  kAudioUnitProperty_MaximumFramesPerSlice, 
-									  kAudioUnitScope_Global, 
-									  0, 
-									  &maximumFramesPerSlice, 
-									  sizeof(maximumFramesPerSlice)
-									  );
+		                              kAudioUnitProperty_MaximumFramesPerSlice, 
+		                              kAudioUnitScope_Global, 
+		                              0, 
+		                              &maximumFramesPerSlice, 
+		                              sizeof(maximumFramesPerSlice));
 		
-		if (result != noErr) {[self printErrorMessage: @"AudioUnitSetProperty (set mixer unit input stream format)" withStatus: result]; return;}
+		if (result != noErr){
+            [self printErrorMessage: @"AudioUnitSetProperty (set mixer unit input stream format)" withStatus: result]; 
+            return;
+        }
 
 		/*
 		 *	Disable and Mute All Buses:
@@ -547,20 +573,21 @@ void audioRouteChangeListenerCallback (void*                  inUserData,
 		 *	Attach the input render callback and context to each input bus.
 		 */
 				 
-		for (UInt32 busNumber = 0; busNumber < busCount; ++busNumber) {
+		for (UInt32 busNumber = 0; busNumber < busCount; ++busNumber){
 		
 			inputCallbackStructArray[busNumber].inputProc       = &auRenderCallback;
 			inputCallbackStructArray[busNumber].inputProcRefCon = playingSoundPtrArray;
 			
 			
-			result = AUGraphSetNodeInputCallback(
-							processingGraph,
-							mixerNode, 
-							busNumber, 
-							&inputCallbackStructArray[busNumber] 
-					 );
+			result = AUGraphSetNodeInputCallback(processingGraph,
+			                                     mixerNode, 
+			                                     busNumber, 
+			                                     &inputCallbackStructArray[busNumber]);
 			
-			if (result != noErr) {[self printErrorMessage: @"AUGraphSetNodeInputCallback" withStatus: result]; return;}
+			if (result != noErr){
+                [self printErrorMessage: @"AUGraphSetNodeInputCallback" withStatus: result]; 
+                return;
+            }
 		}
 		 
 		/*
@@ -569,32 +596,34 @@ void audioRouteChangeListenerCallback (void*                  inUserData,
 		 */
 		for (UInt32 busNumber = 0; busNumber < busCount; ++busNumber) {
 			
-			result = AudioUnitSetProperty (
-										   mixerUnit,
-										   kAudioUnitProperty_StreamFormat,
-										   kAudioUnitScope_Input,
-										   busNumber,
-										   &stereoStreamFormat,
-										   sizeof (stereoStreamFormat)
-										   );
+			result = AudioUnitSetProperty(mixerUnit,
+			                              kAudioUnitProperty_StreamFormat,
+			                              kAudioUnitScope_Input,
+                                          busNumber,
+			                              &stereoStreamFormat,
+			                              sizeof (stereoStreamFormat));
 			
-			if (result != noErr) {[self printErrorMessage: @"AudioUnitSetProperty (set mixer unit input bus stream format)" withStatus: result];return;}
+			if (result != noErr){
+                [self printErrorMessage: @"AudioUnitSetProperty (set mixer unit input bus stream format)" withStatus: result];
+                return;
+            }
 		}
 		
 		/*
 		 *	Set the mixer unit's output sample rate format. This is the only 
 		 *	aspect of the output stream format that must be explicitly set.
 		 */
-		result = AudioUnitSetProperty (
-									   mixerUnit,
-									   kAudioUnitProperty_SampleRate,
-									   kAudioUnitScope_Output,
-									   0,
-									   &graphSampleRate,
-									   sizeof (graphSampleRate)
-									   );
+		result = AudioUnitSetProperty(mixerUnit,
+		                              kAudioUnitProperty_SampleRate,
+		                              kAudioUnitScope_Output,
+		                              0,
+		                              &graphSampleRate,
+		                              sizeof (graphSampleRate));
 		
-		if (result != noErr) {[self printErrorMessage: @"AudioUnitSetProperty (set mixer unit output stream format)" withStatus: result]; return;}
+		if (result != noErr){
+            [self printErrorMessage: @"AudioUnitSetProperty (set mixer unit output stream format)" withStatus: result]; 
+            return;
+        }
 		
 		
 		// .....................................................................
@@ -603,15 +632,14 @@ void audioRouteChangeListenerCallback (void*                  inUserData,
 		AudioUnitElement mixerUnitOutputBus  = 0;
 		AudioUnitElement ioUnitOutputElement = 0;
 		
-		result = AUGraphConnectNodeInput(
-					 processingGraph, 
-					 mixerNode,				// source node 
-					 mixerUnitOutputBus,	// source node bus
-					 ioNode,				// destination node
-					 ioUnitOutputElement	// destination node element
+		result = AUGraphConnectNodeInput(processingGraph, 
+		                                 mixerNode,           // source node 
+		                                 mixerUnitOutputBus,  // source node bus
+		                                 ioNode,              // destination node
+		                                 ioUnitOutputElement  // destination node element
 				 );
 		
-		if (result != noErr) {
+		if (result != noErr){
 			[self printErrorMessage: @"AUGraphConnectNodeInput" withStatus: result]; return;
 		}
 
@@ -793,7 +821,7 @@ void audioRouteChangeListenerCallback (void*                  inUserData,
         
 		result = AUGraphStop(processingGraph);
         
-		if (result != noErr) { 
+		if (result != noErr){ 
 			[self printErrorMessage: @"AUGraphStop" withStatus: result];
 			return; 
 		}
@@ -811,13 +839,13 @@ void audioRouteChangeListenerCallback (void*                  inUserData,
 	OSStatus result;
 	
 	result = AudioUnitSetParameter(mixerUnit, 
-								   kMultiChannelMixerParam_Enable, 
-								   kAudioUnitScope_Input, 
-								   busNumber, 
-								   1, 
-								   0);
+	                               kMultiChannelMixerParam_Enable, 
+	                               kAudioUnitScope_Input, 
+	                               busNumber, 
+	                               1, 
+	                               0);
 	
-	if (result != noErr) {
+	if (result != noErr){
 		[self printErrorMessage: @"EnableMixerBusNo" withStatus: result]; 
 		return;
 	}
@@ -832,14 +860,15 @@ void audioRouteChangeListenerCallback (void*                  inUserData,
 	OSStatus result;
 	
 	result = AudioUnitSetParameter(mixerUnit, 
-								   kMultiChannelMixerParam_Enable, 
-								   kAudioUnitScope_Input, 
-								   busNumber, 
-								   0, 
-								   0);
+	                               kMultiChannelMixerParam_Enable, 
+	                               kAudioUnitScope_Input, 
+	                               busNumber, 
+	                               0, 
+	                               0);
 	
-	if (result != noErr) {
-		{[self printErrorMessage: @"DisableMixerBusNo" withStatus: result]; return;}
+	if (result != noErr){
+		[self printErrorMessage: @"DisableMixerBusNo" withStatus: result]; 
+        return;
 	}
 	
 	playingSoundPtrArray[busNumber]->playing = NO;
@@ -849,35 +878,34 @@ void audioRouteChangeListenerCallback (void*                  inUserData,
 
 - (void) setMixerInput:(UInt32) inputBus gain:(AudioUnitParameterValue) newGain
 {
+	OSStatus result = AudioUnitSetParameter(mixerUnit,
+	                                        kMultiChannelMixerParam_Volume,
+	                                        kAudioUnitScope_Input,
+	                                        inputBus,
+	                                        newGain,
+	                                        0);
 	
-	OSStatus result = AudioUnitSetParameter (
-											 mixerUnit,
-											 kMultiChannelMixerParam_Volume,
-											 kAudioUnitScope_Input,
-											 inputBus,
-											 newGain,
-											 0
-											 );
-	
-    if (result != noErr) {[self printErrorMessage: @"AudioUnitSetParameter (set mixer unit input volume)" withStatus: result]; return;}
-    
+    if (result != noErr){
+        [self printErrorMessage: @"AudioUnitSetParameter (set mixer unit input volume)" withStatus: result]; 
+        return;
+    }
 }
 
 // .............................................................................
 
 - (void) setMixerOutputGain: (AudioUnitParameterValue) newGain {
 	
-    OSStatus result = AudioUnitSetParameter (
-											 mixerUnit,
-											 kMultiChannelMixerParam_Volume,
-											 kAudioUnitScope_Output,
-											 0,
-											 newGain,
-											 0
-											 );
+    OSStatus result = AudioUnitSetParameter(mixerUnit,
+	                                        kMultiChannelMixerParam_Volume,
+	                                        kAudioUnitScope_Output,
+	                                        0,
+	                                        newGain,
+	                                        0);
 	
-    if (result != noErr) {[self printErrorMessage: @"AudioUnitSetParameter (set mixer unit output volume)" withStatus: result]; return;}
-    
+    if (result != noErr){
+        [self printErrorMessage: @"AudioUnitSetParameter (set mixer unit output volume)" withStatus: result]; 
+        return;
+    }
 }
 
 // .............................................................................
@@ -952,10 +980,11 @@ void audioRouteChangeListenerCallback (void*                  inUserData,
 
 // .............................................................................
 
-#pragma mark -
-#pragma mark ENGINE INTERFACE METHODS (public)
+#pragma mark - ENGINE INTERFACE METHODS (public)
 
 #pragma mark Loading of Sounds 
+
+
 - (void) preloadEffect:(NSString*) audioFileName
 {
 	/*
@@ -1014,14 +1043,14 @@ void audioRouteChangeListenerCallback (void*                  inUserData,
 	UInt64 totalFramesInFile = 0;
 	UInt32 frameLengthPropertySize = sizeof (totalFramesInFile);
 	
-	result =    ExtAudioFileGetProperty (audioFileObject,
-										 kExtAudioFileProperty_FileLengthFrames,
-										 &frameLengthPropertySize,
-										 &totalFramesInFile);
+	result = ExtAudioFileGetProperty(audioFileObject,
+	                                 kExtAudioFileProperty_FileLengthFrames,
+	                                 &frameLengthPropertySize,
+	                                 &totalFramesInFile);
 	
-	if (noErr != result) {
+	if (noErr != result){
 		[self printErrorMessage: @"ExtAudioFileGetProperty (audio file length in frames)" withStatus: result]; 
-		ExtAudioFileDispose (audioFileObject); 
+		ExtAudioFileDispose(audioFileObject); 
 		return;
 	}
 	
@@ -1029,10 +1058,15 @@ void audioRouteChangeListenerCallback (void*                  inUserData,
 	
 	if (data) {
 		// Recycle:
-		if (data->audioDataLeft)  { free(data->audioDataLeft);  }
-		if (data->audioDataRight) {	free(data->audioDataRight); }
+		if (data->audioDataLeft){
+            free(data->audioDataLeft);  
+        }
+        
+		if (data->audioDataRight){
+            free(data->audioDataRight);
+        }
 	}
-	else {
+	else{
 		// Create and Insert to Array:
 		data = (SoundData*) malloc(sizeof(SoundData));
 		loadedSoundPtrArray[freeSlot] = data;
@@ -1046,11 +1080,11 @@ void audioRouteChangeListenerCallback (void*                  inUserData,
 	UInt32 formatPropertySize = sizeof(fileAudioFormat);
 	
 	result = ExtAudioFileGetProperty(audioFileObject, 
-									 kExtAudioFileProperty_FileDataFormat, 
-									 &formatPropertySize, 
-									 &fileAudioFormat);
+	                                 kExtAudioFileProperty_FileDataFormat, 
+	                                 &formatPropertySize, 
+	                                 &fileAudioFormat);
 	
-	if (result != noErr) {
+	if (result != noErr){
 		[self printErrorMessage: @"ExtAudioFileGetProperty (file audio format)" withStatus: result]; 
 		ExtAudioFileDispose (audioFileObject); 
 		return;
@@ -1069,14 +1103,14 @@ void audioRouteChangeListenerCallback (void*                  inUserData,
 		// MONO
 		
 		data->isStereo = NO;
-		importFormat = monoStreamFormat;
+		importFormat   = monoStreamFormat;
 	}
 	else if( channelCount == 2 ) {
 		// STEREO - Allocate Right Channel as well
 		
 		data->isStereo = YES;
 		//data->audioDataRight = (AudioUnitSampleType*) calloc(totalFramesInFile, sizeof(AudioUnitSampleType));
-		importFormat = stereoStreamFormat;		
+		importFormat   = stereoStreamFormat;		
 	}
 	else {
 		NSLog(@"*** WARNING: File format not supported - wrong number of channels");
@@ -1093,12 +1127,11 @@ void audioRouteChangeListenerCallback (void*                  inUserData,
 	 *	in turn used in the render callback function.
 	 */
 	result = ExtAudioFileSetProperty(audioFileObject,
-									 kExtAudioFileProperty_ClientDataFormat,
-									 sizeof(importFormat),
-									 &importFormat
-									 );
+	                                 kExtAudioFileProperty_ClientDataFormat,
+	                                 sizeof(importFormat),
+	                                 &importFormat);
 	
-	if (result != noErr) {
+	if (result != noErr){
 		[self printErrorMessage: @"ExtAudioFileSetProperty (client data format)" withStatus: result]; 
 		
 		ExtAudioFileDispose (audioFileObject); 
@@ -1115,7 +1148,7 @@ void audioRouteChangeListenerCallback (void*                  inUserData,
 	 *			audio data obtained from disk using the ExtAudioFileRead
 	 *			function goes to that buffer.
 	 */
-	AudioBufferList*	bufferList;
+	AudioBufferList* bufferList;
 	
 	bufferList = (AudioBufferList*) malloc(sizeof(AudioBufferList) + sizeof(AudioBuffer)*(channelCount - 1));
 	
@@ -1147,14 +1180,14 @@ void audioRouteChangeListenerCallback (void*                  inUserData,
 	/*
 	 *	Setup the AudioBuffer structs in the buffer list
 	 */
-	bufferList->mBuffers[0].mNumberChannels   = 1;
-	bufferList->mBuffers[0].mDataByteSize     = totalFramesInFile * sizeof(AudioUnitSampleType);
-	bufferList->mBuffers[0].mData             = data->audioDataLeft;
+	bufferList->mBuffers[0].mNumberChannels = 1;
+	bufferList->mBuffers[0].mDataByteSize   = totalFramesInFile * sizeof(AudioUnitSampleType);
+	bufferList->mBuffers[0].mData           = data->audioDataLeft;
 	
 	if (channelCount == 2) {
-		bufferList->mBuffers[1].mNumberChannels  = 1;
-		bufferList->mBuffers[1].mDataByteSize    = totalFramesInFile * sizeof (AudioUnitSampleType);
-		bufferList->mBuffers[1].mData            = data->audioDataRight;
+		bufferList->mBuffers[1].mNumberChannels = 1;
+		bufferList->mBuffers[1].mDataByteSize   = totalFramesInFile * sizeof (AudioUnitSampleType);
+		bufferList->mBuffers[1].mData           = data->audioDataRight;
 	}
 	
 	/*
@@ -1164,8 +1197,8 @@ void audioRouteChangeListenerCallback (void*                  inUserData,
 	UInt32 numberOfPacketsToRead = (UInt32) totalFramesInFile;
 	
 	result = ExtAudioFileRead(audioFileObject, 
-							  &numberOfPacketsToRead, 
-							  bufferList);
+	                          &numberOfPacketsToRead, 
+                              bufferList);
 	free(bufferList);
 	
 	if (result != noErr) {
@@ -1183,6 +1216,7 @@ void audioRouteChangeListenerCallback (void*                  inUserData,
 			free (data->audioDataRight); 
 			data->audioDataRight = NULL;
 		}
+        
 		ExtAudioFileDispose (audioFileObject);            
 		return;
 	}
@@ -1200,6 +1234,7 @@ void audioRouteChangeListenerCallback (void*                  inUserData,
 	NSNumber* instanceCount = [NSNumber numberWithUnsignedInt:0];
 	
 	NSMutableDictionary* dbEntry = [[NSMutableDictionary alloc] initWithCapacity:2];
+    
 	[dbEntry setObject:slotNumber    forKey:kMemorySlotNumberKey];
 	[dbEntry setObject:instanceCount forKey:kNumberOfActiveInstancesKey];
 	[dbEntry setObject:audioFileName forKey:kSoundFileNameKey];
@@ -1233,7 +1268,7 @@ void audioRouteChangeListenerCallback (void*                  inUserData,
 	}
 	
 	
-	NSURL* url = [[NSBundle mainBundle] URLForResource:audioFileName withExtension:@"caf"];                   // iOS 4.x
+	NSURL* url = [[NSBundle mainBundle] URLForResource:audioFileName withExtension:@"caf"]; // iOS 4.x
 	//NSURL* url = [NSURL fileURLWithPath:[[NSBundle mainBundle] pathForResource:audioFileName ofType:@"caf"]];	// iOS 3.1.3
     
     if (!url) {
@@ -1324,10 +1359,9 @@ void audioRouteChangeListenerCallback (void*                  inUserData,
 	 *	in turn used in the render callback function.
 	 */
 	result = ExtAudioFileSetProperty(audioFileObject,
-									 kExtAudioFileProperty_ClientDataFormat,
-									 sizeof(importFormat),
-									 &importFormat
-									 );
+	                                 kExtAudioFileProperty_ClientDataFormat,
+	                                 sizeof(importFormat),
+	                                 &importFormat);
 	
 	if (result != noErr) {
 		[self printErrorMessage: @"ExtAudioFileSetProperty (client data format)" withStatus: result]; 
@@ -1377,14 +1411,14 @@ void audioRouteChangeListenerCallback (void*                  inUserData,
 	/*
 	 *	Setup the AudioBuffer structs in the buffer list
 	 */
-	bufferList->mBuffers[0].mNumberChannels   = 1;
-	bufferList->mBuffers[0].mDataByteSize     = totalFramesInFile * sizeof(AudioUnitSampleType);
-	bufferList->mBuffers[0].mData             = pSoundData->audioDataLeft;
+	bufferList->mBuffers[0].mNumberChannels = 1;
+	bufferList->mBuffers[0].mDataByteSize   = totalFramesInFile * sizeof(AudioUnitSampleType);
+	bufferList->mBuffers[0].mData           = pSoundData->audioDataLeft;
 	
 	if (channelCount == 2) {
-		bufferList->mBuffers[1].mNumberChannels  = 1;
-		bufferList->mBuffers[1].mDataByteSize    = totalFramesInFile * sizeof (AudioUnitSampleType);
-		bufferList->mBuffers[1].mData            = pSoundData->audioDataRight;
+		bufferList->mBuffers[1].mNumberChannels = 1;
+		bufferList->mBuffers[1].mDataByteSize   = totalFramesInFile * sizeof (AudioUnitSampleType);
+		bufferList->mBuffers[1].mData           = pSoundData->audioDataRight;
 	}
 	
 	/*
@@ -1394,8 +1428,8 @@ void audioRouteChangeListenerCallback (void*                  inUserData,
 	UInt32 numberOfPacketsToRead = (UInt32) totalFramesInFile;
 	
 	result = ExtAudioFileRead(audioFileObject, 
-							  &numberOfPacketsToRead, 
-							  bufferList);
+	                          &numberOfPacketsToRead, 
+	                          bufferList);
 	free(bufferList);
 	
 	if (result != noErr) {
