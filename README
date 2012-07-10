@@ -1,1 +1,1 @@
-This is the readme file
+Sound EngineThis iOS code consists of a single class (TTSoundEngine) that leverages the Audio Unit framework to load and playback audio with the minimum possible latency.The engine can play a fixed, maximum of uncompressed files in the .caf format, plus one compressed file in the mp3 format (due to hardware constrains for decompression).The code is highly commented so it should be straightforward to use.
