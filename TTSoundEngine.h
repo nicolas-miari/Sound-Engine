@@ -31,16 +31,16 @@
  */
 typedef struct tSoundData
 {
-	BOOL					isStereo;		//  TRUE: Stereo
-											// FALSE: Mono
+	BOOL                    isStereo;       //  TRUE: Stereo
+	                                        // FALSE: Mono
 	
-	UInt32					frameCount;		// Total Audio Frames
+	UInt32                  frameCount;     // Total Audio Frames
 
-	UInt32					usageCount;		// Number of Active (Playing or Paused)
-											// SoundInstance objects referencing this Data.
+	UInt32                  usageCount;     // Number of Active (Playing or Paused)
+	                                        // SoundInstance objects referencing this Data.
 
-	AudioUnitSampleType*	audioDataLeft;	// Left Channel Data
-	AudioUnitSampleType*	audioDataRight;	// Right Channel Data - NULL if 'isStereo' equals FALSE
+	AudioUnitSampleType*    audioDataLeft;	// Left Channel Data
+	AudioUnitSampleType*    audioDataRight;	// Right Channel Data; NULL if 'isStereo' equals FALSE
 	
 }SoundData;
 
@@ -56,25 +56,27 @@ typedef struct tSoundData
  */
 typedef struct tSoundInstance
 {
-	BOOL				 isEffect;			 // Unused (yet)
+	BOOL                 isEffect;           // Unused (yet)
 	
-	BOOL				 playing;			 //  TRUE: Render callback is Connected.
-											 // FALSE: Render callback is Disconnected. (PAUSED)
+	BOOL                 playing;            //  TRUE: Render callback is Connected.
+	                                         // FALSE: Render callback is Disconnected. (PAUSED)
 		
-	BOOL				 loop;				 //  TRUE: Play again after finishing.
-											 // FALSE: Relinquish Mixer Bus after finishing.
+	BOOL                 loop;               //  TRUE: Play again after finishing.
+	                                         // FALSE: Relinquish Mixer Bus after finishing.
 	    
-	float				 volume;			 // 0.0 (Silence) to 1.0f (Full). Setup 
-											 // assigned volume of assigned mixer bus
-											 // to this value.
+	float                volume;             // 0.0 (Silence) to 1.0f (Full). Setup 
+	                                         // assigned volume of assigned mixer bus
+	                                         // to this value.
 	
-	UInt32               sample;			 // the next audio sample to play (Play head position in data)
+	UInt32               sample;             // the next audio sample to play (Play head position in data)
 	
-	SoundData*			 data;				 // Actual Audio Data in memory (Shared by All Instances)
+	SoundData*           data;               // Actual Audio Data in memory (Shared by All Instances)
 	
 }SoundInstance;
 
-// Dictionary Keys for Each Sound in the Memory Data Base
+
+// Dictionary Keys for each sound in the memory database
+
 #define kSoundFileNameKey				@"SoundFileName"
 #define kMemorySlotNumberKey			@"MemorySlotNumber"
 #define kNumberOfActiveInstancesKey		@"NumberOfActiveInstances"
@@ -97,24 +99,23 @@ typedef struct tSoundInstance
 	given moment, so this bus is the only one that can play compressed files 
 	such as mp3. The rest (dubbed 'effect buses') are meant to play short sounds
 	and only support audio in the uncompressed, .caf format.
- 
  */
 @interface TTSoundEngine : NSObject <AVAudioSessionDelegate>
 {
-	BOOL			initialized;
+	BOOL            initialized;
 
-	AudioUnit		mixerUnit;
+	AudioUnit       mixerUnit;
 	
 	// These could be static globals...
-	AudioStreamBasicDescription     stereoStreamFormat;
-	AudioStreamBasicDescription     monoStreamFormat;
+	AudioStreamBasicDescription  stereoStreamFormat;
+	AudioStreamBasicDescription  monoStreamFormat;
 	
-	BOOL			playing;
-	BOOL			playingBGM;
+	BOOL            playing;
+	BOOL            playingBGM;
 	
-	BOOL			interruptedDuringPlayback;
-	double			graphSampleRate;
-	NSTimeInterval	ioBufferDuration;
+	BOOL            interruptedDuringPlayback;
+	double          graphSampleRate;
+	NSTimeInterval  ioBufferDuration;
 	
 	
 	/*!
@@ -130,36 +131,35 @@ typedef struct tSoundInstance
 		Key:kNumberOfActiveInstancesKey
 		Object:NSNumber object representing NSUInteger Value (# of Instances Playing or Paused)
 	 */
-	NSMutableDictionary*	dataBase;
+	NSMutableDictionary*    dataBase;
 	
 	/*!
 		Array containing the SAME objects as dataBase, in an MRU order.
 		Everytime a sound is played, it is moved to the top of the array.
 	 */
-	NSMutableArray* ranking;
+	NSMutableArray*   ranking;
 	
 	/*!
 		Overall sound effect volume. Each effect bus' individual volume is
 		modulated (multiplied) by this value.
 	 */
-	CGFloat sfxVolume;
+	CGFloat  sfxVolume;
 	
 	/*!
 		Volume of the BGM bus.
 	 */
-	CGFloat bgmVolume;
+	CGFloat  bgmVolume;
 	
 	
 	NSMutableArray* busesToResume;
 	
-	BOOL			fadingOutBGM;
-	CGFloat			bgmFadeOutDuration;
-	CGFloat			bgmFadeOutCount;
-	
+	BOOL            fadingOutBGM;
+	CGFloat         bgmFadeOutDuration;
+	CGFloat         bgmFadeOutCount;
 }
 
-@property								  BOOL        interruptedDuringPlayback;
-@property (readonly, getter = isPlaying)  BOOL        playing;
+@property                                BOOL  interruptedDuringPlayback;
+@property (readonly, getter = isPlaying) BOOL  playing;
 
 // .............................................................................
 
@@ -201,7 +201,7 @@ typedef struct tSoundInstance
 
 /*!
  */
-- (void) preloadBGM:(NSString *)audioFileName;
+- (void) preloadBGM:(NSString*) audioFileName;
 
 
 /*!
@@ -258,7 +258,7 @@ typedef struct tSoundInstance
 	@see
 		playEffect:
  */
-- (void) playEffect:(NSString *)audioFileName withVolume:(CGFloat) volume;
+- (void) playEffect:(NSString*) audioFileName withVolume:(CGFloat) volume;
 
 
 /*!
@@ -337,7 +337,10 @@ typedef struct tSoundInstance
 
 
 /*!
-	Called once on each frame. Updates current volume for fade effects.
+    If there is an object with a CADisplayLink somewhere in the application, it
+    should call this method on the engine every frame, with the ellapsed time
+    (seconds) passed in 'dt'. 
+    Used to orchestrate fades.
  */
 - (void) update:(CGFloat) dt;
 
