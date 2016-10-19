@@ -38,8 +38,8 @@
  
 	@see SoundInstance
  */
-typedef struct tSoundData
-{
+typedef struct tSoundData {
+
 	BOOL					isStereo;		// TRUE: Stereo / FALSE: Mono
 	
 	UInt32					frameCount;		// Total Audio Frames
@@ -62,8 +62,8 @@ typedef struct tSoundData
  
 	@see SoundData
  */
-typedef struct tSoundInstance
-{
+typedef struct tSoundInstance {
+
 	BOOL				 isEffect;			 // Unused (yet)
 	
 	BOOL				 playing;			 //  TRUE: Render callback is Connected.
@@ -113,7 +113,7 @@ typedef struct tSoundInstance
 /*!
 	Provides a handle to the (unique) engine instance.
  */
-+ (TTSoundEngine*) sharedEngine;
++ (TTSoundEngine *)sharedEngine;
 
 
 /*!
@@ -143,7 +143,7 @@ typedef struct tSoundInstance
 		The file name of the sound to load. Path and file extension should NOT
 		be part of the string. An extension of .caf is assumed.
  */
-- (void) preloadEffect:(NSString*) audioFileName;
+- (void) preloadEffect:(NSString *)audioFileName;
 
 
 /*!
@@ -183,7 +183,7 @@ typedef struct tSoundInstance
 	@see
 		playEffect:withVolume:
  */
-- (void) playEffect:(NSString*) audioFileName;
+- (void) playEffect:(NSString *)audioFileName;
 
 
 /*!

@@ -74,8 +74,8 @@ static OSStatus auRenderCallback (void*                         inRefCon,
 								  const AudioTimeStamp*         inTimeStamp,
 								  UInt32						inBusNumber,
 								  UInt32						inNumberFrames,
-								  AudioBufferList*				ioData )
-{
+								  AudioBufferList*				ioData ) {
+
 	// Called on every mixer bus every time the system needs more audio data
     //  to play (buffers).
 	
@@ -109,8 +109,8 @@ static OSStatus auRenderCallback (void*                         inRefCon,
 	SInt32*	outSamplesChannelLeft;
 	SInt32*	outSamplesChannelRight;
 	
-	outSamplesChannelLeft  = (SInt32*) ioData->mBuffers[0].mData;
-	outSamplesChannelRight = (SInt32*) ioData->mBuffers[1].mData;
+	outSamplesChannelLeft  = (SInt32 *)ioData->mBuffers[0].mData;
+	outSamplesChannelRight = (SInt32 *)ioData->mBuffers[1].mData;
 	
 	if (dataInLeft == NULL || soundInstance->playing == NO) {
         // Sound is not allocated yet.
@@ -229,8 +229,8 @@ static OSStatus auRenderCallback (void*                         inRefCon,
 void audioRouteChangeListenerCallback (void*                  inUserData,
 									   AudioSessionPropertyID inPropertyID,
 									   UInt32                 inPropertyValueSize,
-									   const void*            inPropertyValue) 
-{
+									   const void*            inPropertyValue)  {
+
     
     // Ensure that this callback was invoked because of an audio route change
     if (inPropertyID != kAudioSessionProperty_AudioRouteChange) return;
@@ -241,7 +241,7 @@ void audioRouteChangeListenerCallback (void*                  inUserData,
 	  	You provide this reference when registering this callback (see the call 
 	  	to AudioSessionAddPropertyListener).
 	 */
-    TTSoundEngine *audioObject = (__bridge TTSoundEngine*) inUserData;
+    TTSoundEngine *audioObject = (__bridge TTSoundEngine *)inUserData;
     
     // if application sound is not playing, there's nothing to do, so return.
     if ([audioObject isPlaying] == NO) {
@@ -294,7 +294,7 @@ void audioRouteChangeListenerCallback (void*                  inUserData,
 
 - (void) registerNotifcations;
 
-- (void) printErrorMessage:(NSString*) errorString withStatus:(OSStatus) result;
+- (void) printErrorMessage:(NSString *)errorString withStatus:(OSStatus) result;
 
 - (void) setMixerInput:(UInt32)inputBus gain:(AudioUnitParameterValue)newGain;
 
@@ -308,8 +308,8 @@ void audioRouteChangeListenerCallback (void*                  inUserData,
 #pragma mark - SOUND ENGINE - Implementation 
 
 
-@implementation TTSoundEngine
-{
+@implementation TTSoundEngine {
+
 	BOOL			_initialized;
     
 	AudioUnit		_mixerUnit;
@@ -377,8 +377,8 @@ void audioRouteChangeListenerCallback (void*                  inUserData,
 // .............................................................................
 // DESIGNATED INITIALIZER
 
-- (id) init
-{
+- (id) init {
+
 	if((self = [super init])){
 	
         // 1. Initialize instance variables
@@ -398,13 +398,13 @@ void audioRouteChangeListenerCallback (void*                  inUserData,
         
 		for (NSUInteger i=0; i < MAX_FILES_IN_MEMORY; i++) {
 			
-			loadedSoundPtrArray[i] = (SoundData*) calloc(1, sizeof(SoundData));
+			loadedSoundPtrArray[i] = (SoundData *)calloc(1, sizeof(SoundData));
 		}
         
 		
 		for (NSUInteger i=0; i < MAX_CONCURRENT_SOUNDS; i++) {
 			
-			playingSoundPtrArray[i] = (SoundInstance*) calloc(1, sizeof(SoundInstance));
+			playingSoundPtrArray[i] = (SoundInstance *)calloc(1, sizeof(SoundInstance));
 		}
 		
         
@@ -427,8 +427,8 @@ void audioRouteChangeListenerCallback (void*                  inUserData,
 
 // .............................................................................
 
-- (void) registerNotifcations
-{
+- (void) registerNotifcations {
+
     NSNotificationCenter* notificationCenter = [NSNotificationCenter defaultCenter];
     
     
@@ -445,8 +445,8 @@ void audioRouteChangeListenerCallback (void*                  inUserData,
 
 // .............................................................................
 
-- (void) initializeEngine
-{
+- (void) initializeEngine {
+
     // Must Call Once BEFORE Playing any Sound
 	
 	if (_initialized == NO) {
@@ -761,8 +761,8 @@ void audioRouteChangeListenerCallback (void*                  inUserData,
 
 // .............................................................................
 
-- (void) cleanUpBusNo:(uint) busNumber
-{
+- (void) cleanUpBusNo:(uint) busNumber {
+
 	/*
 	 *	Free Memory Associated with the Sound in Bus no. 'busNumber'.
 	 *  Called when a non-looping sound reaches EOF.
@@ -798,8 +798,8 @@ void audioRouteChangeListenerCallback (void*                  inUserData,
 
 // .............................................................................
 
-- (void) purgeUnusedSounds
-{
+- (void) purgeUnusedSounds {
+
 	/*
 	 	Called by Scene Director (=Main View Controller)
 	   or App Delegate (TODO: DECIDE) when receiving a Memory Warning.
@@ -853,21 +853,21 @@ void audioRouteChangeListenerCallback (void*                  inUserData,
 
 // .............................................................................
 
-- (void) printErrorMessage: (NSString *) errorString withStatus: (OSStatus) result 
-{
+- (void) printErrorMessage: (NSString  *)errorString withStatus: (OSStatus) result  {
+
 	
     char resultString[5];
     UInt32 swappedResult = CFSwapInt32HostToBig (result);
     bcopy (&swappedResult, resultString, 4);
     resultString[4] = '\0';
 	
-    NSLog ( @"*** %@ error: %s\n", errorString, (char*) &resultString);
+    NSLog ( @"*** %@ error: %s\n", errorString, (char *)&resultString);
 }
 
 // .............................................................................
 
-- (void)startAUGraph
-{
+- (void)startAUGraph {
+
     // Starts Render.
     
 	OSStatus result = AUGraphStart(processingGraph);
@@ -882,8 +882,8 @@ void audioRouteChangeListenerCallback (void*                  inUserData,
 
 // .............................................................................
 
-- (void)stopAUGraph
-{
+- (void)stopAUGraph {
+
 	// Stops Render.
     
     Boolean isRunning = NO;
@@ -911,8 +911,8 @@ void audioRouteChangeListenerCallback (void*                  inUserData,
 
 // .............................................................................
 
-- (void) enableMixerBusNo:(UInt32) busNumber
-{
+- (void) enableMixerBusNo:(UInt32) busNumber {
+
 	OSStatus result;
 	
 	result = AudioUnitSetParameter(_mixerUnit, 
@@ -932,8 +932,8 @@ void audioRouteChangeListenerCallback (void*                  inUserData,
 
 // .............................................................................
 
-- (void) disableMixerBusNo:(UInt32) busNumber
-{
+- (void) disableMixerBusNo:(UInt32) busNumber {
+
 	OSStatus result;
 	
 	result = AudioUnitSetParameter(_mixerUnit, 
@@ -952,8 +952,8 @@ void audioRouteChangeListenerCallback (void*                  inUserData,
 
 // .............................................................................
 
-- (void) setMixerInput:(UInt32) inputBus gain:(AudioUnitParameterValue) newGain
-{
+- (void) setMixerInput:(UInt32) inputBus gain:(AudioUnitParameterValue) newGain {
+
 	
 	OSStatus result = AudioUnitSetParameter (
 											 _mixerUnit,
@@ -991,8 +991,8 @@ void audioRouteChangeListenerCallback (void*                  inUserData,
 
 // .............................................................................
 
-- (NSUInteger) firstFreeMemorySlot
-{
+- (NSUInteger) firstFreeMemorySlot {
+
     // Return the first available slot (index) in the loaded sounds array, using
     // the following criterion:
 
@@ -1045,8 +1045,8 @@ void audioRouteChangeListenerCallback (void*                  inUserData,
 
 // .............................................................................
 
-- (NSUInteger) firstFreeMixerBus
-{
+- (NSUInteger) firstFreeMixerBus {
+
     // Return the first available Mixer Bus
 	
 	for (NSUInteger i = SFX_FIRST_BUS_NUMBER; i< MAX_CONCURRENT_SOUNDS; i++) {
@@ -1069,15 +1069,15 @@ void audioRouteChangeListenerCallback (void*                  inUserData,
 #pragma mark - Notification Handlers
 
 
-- (void) applicationWillResignActive:(NSNotification*) notification
-{
+- (void) applicationWillResignActive:(NSNotification *)notification {
+
     [self pauseEngine];
 }
 
 // .............................................................................
 
-- (void) applicationDidBecomeActive:(NSNotification*) notification
-{
+- (void) applicationDidBecomeActive:(NSNotification *)notification {
+
     [self resumeEngine];
 }
 
@@ -1087,8 +1087,8 @@ void audioRouteChangeListenerCallback (void*                  inUserData,
 
 #pragma mark Loading of Sounds 
 
-- (void) unloadSoundEffectOnSlotNumber:(NSUInteger) slotNumber
-{
+- (void) unloadSoundEffectOnSlotNumber:(NSUInteger) slotNumber {
+
     // Remove all entries that point to this slot number
     
     
@@ -1109,8 +1109,8 @@ void audioRouteChangeListenerCallback (void*                  inUserData,
 
 // .............................................................................
 
-- (void) preloadEffect:(NSString*) audioFileName
-{
+- (void) preloadEffect:(NSString *)audioFileName {
+
     /*
         Loads the specified audio file in the first available memory slot.
         If no slot is available, log a warning and ignore.
@@ -1181,13 +1181,13 @@ void audioRouteChangeListenerCallback (void*                  inUserData,
 	}
 	
 	// Get the audio file's length in frames.
-	UInt64 totalFramesInFile = 0;
+	UInt32 totalFramesInFile = 0;
 	UInt32 frameLengthPropertySize = sizeof (totalFramesInFile);
 	
-	result =    ExtAudioFileGetProperty (audioFileObject,
-										 kExtAudioFileProperty_FileLengthFrames,
-										 &frameLengthPropertySize,
-										 &totalFramesInFile);
+	result = ExtAudioFileGetProperty (audioFileObject,
+                                      kExtAudioFileProperty_FileLengthFrames,
+                                      &frameLengthPropertySize,
+                                      &totalFramesInFile);
 	
 	if (noErr != result) {
 		[self printErrorMessage: @"ExtAudioFileGetProperty (audio file length in frames)" withStatus: result]; 
@@ -1211,7 +1211,7 @@ void audioRouteChangeListenerCallback (void*                  inUserData,
 	else {
 		// Create new SoundData and insert into array:
 		
-        data = (SoundData*) malloc(sizeof(SoundData));
+        data = (SoundData *)malloc(sizeof(SoundData));
 		loadedSoundPtrArray[freeSlot] = data;
 	}
 
@@ -1295,7 +1295,7 @@ void audioRouteChangeListenerCallback (void*                  inUserData,
     
 	AudioBufferList*	bufferList;
 	
-	bufferList = (AudioBufferList*) malloc(sizeof(AudioBufferList) + sizeof(AudioBuffer)*(channelCount - 1));
+	bufferList = (AudioBufferList *)malloc(sizeof(AudioBufferList) + sizeof(AudioBuffer)*(channelCount - 1));
 	
 	if (bufferList == NULL) {
 		NSLog (@"*** malloc failure for allocating bufferList memory"); 
@@ -1316,10 +1316,10 @@ void audioRouteChangeListenerCallback (void*                  inUserData,
 	
     // Allocate Data Buffers (Deferred until now to simplify abortion)
     
-	data->audioDataLeft = (SInt32*) calloc(totalFramesInFile, sizeof(SInt32));
+	data->audioDataLeft = (SInt32 *)calloc(totalFramesInFile, sizeof(SInt32));
 	
 	if (channelCount == 2) {
-		data->audioDataRight = (SInt32*) calloc(totalFramesInFile, sizeof(SInt32));
+		data->audioDataRight = (SInt32 *)calloc(totalFramesInFile, sizeof(SInt32));
 	}
 	
 	
@@ -1373,7 +1373,7 @@ void audioRouteChangeListenerCallback (void*                  inUserData,
 	
 	
 	// ...Next, Cache in Data Base:
-	NSNumber* slotNumber    = [NSNumber numberWithUnsignedInt:freeSlot];
+	NSNumber* slotNumber    = [NSNumber numberWithUnsignedInteger:freeSlot];
 	NSNumber* instanceCount = [NSNumber numberWithUnsignedInt:0];
 	
 	NSMutableDictionary* dbEntry = [[NSMutableDictionary alloc] initWithCapacity:2];
@@ -1385,7 +1385,7 @@ void audioRouteChangeListenerCallback (void*                  inUserData,
 	
 	[_ranking addObject:dbEntry];
 	
-	NSLog(@"TTSoundEngine: Preloaded effect \"%@\" into slot no. [%u]",
+	NSLog(@"TTSoundEngine: Preloaded effect \"%@\" into slot no. [%tu]",
           audioFileName,
           freeSlot);
     
@@ -1394,8 +1394,8 @@ void audioRouteChangeListenerCallback (void*                  inUserData,
 
 // .............................................................................
 
-- (void) preloadBGM:(NSString *)audioFileName
-{
+- (void) preloadBGM:(NSString *)audioFileName {
+
 	/*
 	 	Loads specified audio file for use as BGM. If an audio file is already
     	 loaded, the data is discarded. If the previously loaded BGM is 
@@ -1430,7 +1430,8 @@ void audioRouteChangeListenerCallback (void*                  inUserData,
 	}
 	
 	// Get the audio file's length in frames.
-	UInt64 totalFramesInFile = 0;
+	UInt32 totalFramesInFile = 0; // TODO: Check that 32 bits are enough
+    
 	UInt32 frameLengthPropertySize = sizeof (totalFramesInFile);
 	
 	result = ExtAudioFileGetProperty(audioFileObject,
@@ -1526,7 +1527,7 @@ void audioRouteChangeListenerCallback (void*                  inUserData,
     
 	AudioBufferList*	bufferList;
 	
-	bufferList = (AudioBufferList*) malloc(sizeof(AudioBufferList) + sizeof(AudioBuffer)*(channelCount - 1));
+	bufferList = (AudioBufferList *)malloc(sizeof(AudioBufferList) + sizeof(AudioBuffer)*(channelCount - 1));
 	
 	if (bufferList == NULL) {
 		NSLog (@"*** malloc failure for allocating bufferList memory"); 
@@ -1546,10 +1547,10 @@ void audioRouteChangeListenerCallback (void*                  inUserData,
 	
     // Allocate Audio Data Buffers (Deferred to simplify abortion)
     
-	pSoundData->audioDataLeft = (SInt32*) calloc(totalFramesInFile, sizeof(SInt32));
+	pSoundData->audioDataLeft = (SInt32 *)calloc(totalFramesInFile, sizeof(SInt32));
 	
 	if (channelCount == 2) {
-		pSoundData->audioDataRight = (SInt32*) calloc(totalFramesInFile, sizeof(SInt32));
+		pSoundData->audioDataRight = (SInt32 *)calloc(totalFramesInFile, sizeof(SInt32));
 	}
 	
 	
@@ -1609,7 +1610,7 @@ void audioRouteChangeListenerCallback (void*                  inUserData,
 	
 	if(!pSoundInstance){
 		// Allocate (First Time)
-		pSoundInstance = (SoundInstance*) malloc(sizeof(SoundInstance));
+		pSoundInstance = (SoundInstance *)malloc(sizeof(SoundInstance));
 		
 		pSoundInstance->isEffect = NO;
 		pSoundInstance->playing  = NO;
@@ -1636,8 +1637,8 @@ void audioRouteChangeListenerCallback (void*                  inUserData,
 #pragma mark Playback Configuration
 
 
-- (void) setEffectVolume:(CGFloat) volume
-{
+- (void) setEffectVolume:(CGFloat) volume {
+
     // Sets Master SFX Volume. Modulates each individual Effect's
     // Volume (Specified on play)
 	
@@ -1646,8 +1647,8 @@ void audioRouteChangeListenerCallback (void*                  inUserData,
 
 // .............................................................................
 
-- (void) setBGMVolume:(CGFloat) volume
-{
+- (void) setBGMVolume:(CGFloat) volume {
+
 	_bgmVolume = volume;
 }
 
@@ -1656,8 +1657,8 @@ void audioRouteChangeListenerCallback (void*                  inUserData,
 #pragma mark Playback of Sounds
 
 
-- (void) playEffect:(NSString *)audioFileName withVolume:(CGFloat) volume
-{
+- (void) playEffect:(NSString *)audioFileName withVolume:(CGFloat) volume {
+
     // Play Effect. Preload if Necessary.
 	
 	if (!audioFileName) {
@@ -1724,8 +1725,8 @@ void audioRouteChangeListenerCallback (void*                  inUserData,
 
 // .............................................................................
 
-- (void) playEffect:(NSString*) audioFileName
-{
+- (void) playEffect:(NSString *)audioFileName {
+
     // Used for Short Sound Effects
     
 	[self playEffect:audioFileName withVolume:DEFAULT_SFX_VOLUME];
@@ -1733,8 +1734,8 @@ void audioRouteChangeListenerCallback (void*                  inUserData,
 
 // .............................................................................
 
-- (void) playBGM
-{
+- (void) playBGM {
+
 	/*
 	    Plays (resumes) currently loaded BGM (if any), with current settings
 	 	(Volume, looping, etc)
@@ -1757,8 +1758,8 @@ void audioRouteChangeListenerCallback (void*                  inUserData,
 
 // .............................................................................
 
-- (void) pauseBGM
-{
+- (void) pauseBGM {
+
 	if (_playingBGM) {
 		
 		// Pause
@@ -1776,8 +1777,8 @@ void audioRouteChangeListenerCallback (void*                  inUserData,
 
 // .............................................................................
 
-- (void) stopBGM
-{
+- (void) stopBGM {
+
 	if (_playingBGM) {
 		
 		// Stop playback
@@ -1800,15 +1801,15 @@ void audioRouteChangeListenerCallback (void*                  inUserData,
 
 // .............................................................................
 
-- (void) resumeBGM
-{
+- (void) resumeBGM {
+
 	return [self playBGM];
 }
 
 // .............................................................................
 
-- (void) fadeOutBGMWithDuration:(CGFloat) duration
-{
+- (void) fadeOutBGMWithDuration:(CGFloat) duration {
+
 	if (_playingBGM && !_fadingOutBGM) {
 		
 		_fadingOutBGM = YES;
@@ -1821,8 +1822,8 @@ void audioRouteChangeListenerCallback (void*                  inUserData,
 
 // .............................................................................
 
-- (void) delayedPlaybackTimerFired:(NSTimer*) timer
-{
+- (void) delayedPlaybackTimerFired:(NSTimer *)timer {
+
     NSDictionary* userInfo = [timer userInfo];
     
     NSString* effectName = [userInfo objectForKey:@"Effect Name"];
@@ -1836,8 +1837,8 @@ void audioRouteChangeListenerCallback (void*                  inUserData,
 
 - (void) playEffect:(NSString *)audioFileName
          withVolume:(CGFloat)volume
-         afterDelay:(CGFloat) delay
-{
+         afterDelay:(CGFloat) delay {
+
     if (delay == 0.0) {
         [self playEffect:audioFileName
               withVolume:volume];
@@ -1862,16 +1863,16 @@ void audioRouteChangeListenerCallback (void*                  inUserData,
 
 #pragma mark Query Engine State
 
-- (BOOL) isPlayingBGM
-{
+- (BOOL) isPlayingBGM {
+
 	return _playingBGM;
 }
 
 
 // .............................................................................
 
-- (void) update:(CGFloat) dt
-{
+- (void) update:(CGFloat) dt {
+
 	if (_playingBGM && _fadingOutBGM)
 	{
 		_bgmFadeOutCount += dt;
@@ -1893,8 +1894,8 @@ void audioRouteChangeListenerCallback (void*                  inUserData,
 
 #pragma mark Engine Control
 
-- (void) pauseEngine
-{
+- (void) pauseEngine {
+
 	/*
 	 	  Pauses the whole engine (all sounds playing).
           No new sound can play until the Engine is resumed.
@@ -1905,8 +1906,8 @@ void audioRouteChangeListenerCallback (void*                  inUserData,
 
 // .............................................................................
 
-- (void) resumeEngine
-{
+- (void) resumeEngine {
+
 	/*
 	 	  Resumes the whole engine; i.e., undoes the effect of
 	 	   -(void) pauseEngine
@@ -1917,8 +1918,8 @@ void audioRouteChangeListenerCallback (void*                  inUserData,
 
 // .............................................................................
 
-- (void) pauseAllPlayingSounds
-{
+- (void) pauseAllPlayingSounds {
+
 	/*
 	 	  Pauses all sounds currently playing at their current position,
 	 	  but still allows for new sounds to be played.
@@ -1927,13 +1928,13 @@ void audioRouteChangeListenerCallback (void*                  inUserData,
 	
 	[_busesToResume removeAllObjects];
 	
-	for (NSUInteger i=0; i < MAX_CONCURRENT_SOUNDS; i++) {
+	for (UInt32 i=0; i < MAX_CONCURRENT_SOUNDS; i++) {
 		
 		SoundInstance* pInstance = playingSoundPtrArray[i];
 		
 		if (pInstance->playing) {
 			pInstance->playing = NO;
-			[_busesToResume addObject:[NSNumber numberWithUnsignedInt:i]];
+			[_busesToResume addObject:[NSNumber numberWithUnsignedInteger:i]];
 			[self disableMixerBusNo:i];
 		}
 	}
@@ -1941,8 +1942,8 @@ void audioRouteChangeListenerCallback (void*                  inUserData,
 
 // .............................................................................
 
-- (void) resumeAllPausedSounds
-{
+- (void) resumeAllPausedSounds {
+
 	/*
 	 	  Resumes all sounds that were paused last time
 	 	  
@@ -1956,7 +1957,7 @@ void audioRouteChangeListenerCallback (void*                  inUserData,
 	
 	for (NSNumber* number in _busesToResume) {
 		
-		NSUInteger i = [number unsignedIntValue];
+		UInt32 i = [number unsignedIntValue];
 		
 		SoundInstance* pInstance = playingSoundPtrArray[i];
 		
@@ -1971,8 +1972,8 @@ void audioRouteChangeListenerCallback (void*                  inUserData,
 
 #pragma mark - Audio Session Delegate Methods
 
-- (void) beginInterruption
-{
+- (void) beginInterruption {
+
 	NSLog (@"Audio session was interrupted.");
     
     if (_playing) {
@@ -1984,7 +1985,7 @@ void audioRouteChangeListenerCallback (void*                  inUserData,
 	}
 }
 
-- (void) handleInterruption: (NSNotification*) notification {
+- (void) handleInterruption: (NSNotification *)notification {
     
 }
 
@@ -1993,8 +1994,8 @@ void audioRouteChangeListenerCallback (void*                  inUserData,
 #pragma mark - Singleton Methods
 
 
-+ (TTSoundEngine*) sharedEngine
-{
++ (TTSoundEngine *)sharedEngine {
+
     static dispatch_once_t onceToken;
     
     dispatch_once(&onceToken, ^{

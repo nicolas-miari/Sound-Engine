@@ -17,6 +17,7 @@
 		1FE4A94718D16C7700F53AD9 /* TTSoundEngine.m in Sources */ = {isa = PBXBuildFile; fileRef = 1FE4A94618D16C7700F53AD9 /* TTSoundEngine.m */; };
 		1FE4A94918D16C9F00F53AD9 /* AVFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1FE4A94818D16C9F00F53AD9 /* AVFoundation.framework */; };
 		1FE4A94B18D16CA500F53AD9 /* AudioToolbox.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1FE4A94A18D16CA500F53AD9 /* AudioToolbox.framework */; };
+		379195621DB74FE5002D0AA7 /* Launch Screen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 379195611DB74FE5002D0AA7 /* Launch Screen.storyboard */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -36,6 +37,7 @@
 		1FE4A94618D16C7700F53AD9 /* TTSoundEngine.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = TTSoundEngine.m; path = "../../../Sound Engine/src/TTSoundEngine.m"; sourceTree = "<group>"; };
 		1FE4A94818D16C9F00F53AD9 /* AVFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AVFoundation.framework; path = System/Library/Frameworks/AVFoundation.framework; sourceTree = SDKROOT; };
 		1FE4A94A18D16CA500F53AD9 /* AudioToolbox.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AudioToolbox.framework; path = System/Library/Frameworks/AudioToolbox.framework; sourceTree = SDKROOT; };
+		379195611DB74FE5002D0AA7 /* Launch Screen.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; path = "Launch Screen.storyboard"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -121,6 +123,7 @@
 			isa = PBXGroup;
 			children = (
 				1FE4A93A18D16BF700F53AD9 /* Images.xcassets */,
+				379195611DB74FE5002D0AA7 /* Launch Screen.storyboard */,
 			);
 			name = Resources;
 			path = "Project Files/Resources";
@@ -200,6 +203,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				379195621DB74FE5002D0AA7 /* Launch Screen.storyboard in Resources */,
 				1FE4A93F18D16BF700F53AD9 /* Images.xcassets in Resources */,
 				1FE4A93C18D16BF700F53AD9 /* InfoPlist.strings in Resources */,
 			);
@@ -308,12 +312,11 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				ASSETCATALOG_COMPILER_LAUNCHIMAGE_NAME = LaunchImage;
 				DEVELOPMENT_TEAM = D2D4S4F85R;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "Project Files/Other Sources/SoundEngineTest-Prefix.pch";
 				INFOPLIST_FILE = "Project Files/Config/SoundEngineTest-Info.plist";
-				IPHONEOS_DEPLOYMENT_TARGET = 6.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				WRAPPER_EXTENSION = app;
 			};
@@ -323,12 +326,11 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				ASSETCATALOG_COMPILER_LAUNCHIMAGE_NAME = LaunchImage;
 				DEVELOPMENT_TEAM = D2D4S4F85R;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "Project Files/Other Sources/SoundEngineTest-Prefix.pch";
 				INFOPLIST_FILE = "Project Files/Config/SoundEngineTest-Info.plist";
-				IPHONEOS_DEPLOYMENT_TARGET = 6.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				WRAPPER_EXTENSION = app;
 			};
