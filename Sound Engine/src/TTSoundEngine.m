@@ -95,17 +95,22 @@ static OSStatus auRenderCallback (void*                         inRefCon,
 	UInt32 frameTotalForSound = data->frameCount;
 	BOOL   isStereo			  = data->isStereo;
 	
-	AudioUnitSampleType*	dataInLeft;
-	AudioUnitSampleType*	dataInRight;
+	SInt32*	dataInLeft;
+	SInt32*	dataInRight;
 	
-	dataInLeft                = data->audioDataLeft;
-	if (isStereo) dataInRight = data->audioDataRight;
+	dataInLeft = data->audioDataLeft;
+    if (isStereo){
+        dataInRight = data->audioDataRight;
+    }
+    else{
+        dataInRight = dataInLeft;
+    }
 	
-	AudioUnitSampleType*	outSamplesChannelLeft;
-	AudioUnitSampleType*	outSamplesChannelRight;
+	SInt32*	outSamplesChannelLeft;
+	SInt32*	outSamplesChannelRight;
 	
-	outSamplesChannelLeft  = (AudioUnitSampleType*) ioData->mBuffers[0].mData;
-	outSamplesChannelRight = (AudioUnitSampleType*) ioData->mBuffers[1].mData;
+	outSamplesChannelLeft  = (SInt32*) ioData->mBuffers[0].mData;
+	outSamplesChannelRight = (SInt32*) ioData->mBuffers[1].mData;
 	
 	if (dataInLeft == NULL || soundInstance->playing == NO) {
         // Sound is not allocated yet.
@@ -452,11 +457,23 @@ void audioRouteChangeListenerCallback (void*                  inUserData,
 		NSError* audioSessionError = nil;
 		
 		AVAudioSession * session = [AVAudioSession sharedInstance];
-		[session setDelegate:self];
+		//[session setDelegate:self]; // DEPRECATED
 		
+        [[NSNotificationCenter defaultCenter] addObserver: self
+                                                 selector: @selector(handleInterruption:)
+                                                     name: AVAudioSessionInterruptionNotification
+                                                   object: session];
+        // TODO: Consider supporting other notifications:
+        // AVAudioSessionRouteChangeNotification
+        // AVAudioSessionMediaServicesWereLostNotification
+        // AVAudioSessionMediaServicesWereResetNotification
+        // etc.
+        
+        
 		_graphSampleRate = 44100.0; // [Hertz]
-		[session setPreferredHardwareSampleRate:_graphSampleRate error:&audioSessionError];
-		if (audioSessionError) { NSLog(@"Error Setting Audio Session Preferred Hardware Smple Rate"); return;}
+        //[session setPreferredHardwareSampleRate:_graphSampleRate error:&audioSessionError]; // DEPRECATED
+        [session setPreferredSampleRate:_graphSampleRate error:&audioSessionError];
+        if (audioSessionError) { NSLog(@"Error Setting Audio Session Preferred Hardware Smple Rate"); return;}
 
 		//[session setCategory:AVAudioSessionCategoryPlayback error:&audioSessionError];
 		[session setCategory:AVAudioSessionCategoryAmbient error:&audioSessionError];
@@ -466,7 +483,8 @@ void audioRouteChangeListenerCallback (void*                  inUserData,
 		[session setActive:YES error:&audioSessionError];
 		if (audioSessionError) { NSLog(@"Error Setting Audio Session Active"); return;}
 		
-		_graphSampleRate = [session currentHardwareSampleRate];
+        //_graphSampleRate = [session currentHardwareSampleRate]; // DEPRECATED
+        _graphSampleRate = [session sampleRate];
 		
 		_ioBufferDuration = 0.005;	// [seconds] Default:23ms (=1024 Samples @ 44.1 kHz)
 		[session setPreferredIOBufferDuration:_ioBufferDuration error:&audioSessionError];
@@ -488,11 +506,11 @@ void audioRouteChangeListenerCallback (void*                  inUserData,
 		// [ 2 ] Setup MONO and STEREO Stream Formats
 		
 		/* 
-		 	The AudioUnitSampleType data type is the recommended type for sample
+		 	The SInt32 data type is the recommended type for sample
 		 	data in audio units. This obtains the byte size of the type for use
 		 	in filling in the ASBD.
 		 */
-		size_t bytesPerSample = sizeof (AudioUnitSampleType);
+		UInt32 bytesPerSample = sizeof (SInt32);
 		
         
 		/* 
@@ -500,7 +518,7 @@ void audioRouteChangeListenerCallback (void*                  inUserData,
 		 	PCM, stereo, noninterleaved stream at the hardware sample rate.
 		 */
 		stereoStreamFormat.mFormatID          = kAudioFormatLinearPCM;
-		stereoStreamFormat.mFormatFlags       = kAudioFormatFlagsAudioUnitCanonical;
+		stereoStreamFormat.mFormatFlags       = kAudioFormatFlagIsSignedInteger;
 		stereoStreamFormat.mBytesPerPacket    = bytesPerSample;
 		stereoStreamFormat.mFramesPerPacket   = 1;
 		stereoStreamFormat.mBytesPerFrame     = bytesPerSample;
@@ -509,7 +527,7 @@ void audioRouteChangeListenerCallback (void*                  inUserData,
 		stereoStreamFormat.mSampleRate        = _graphSampleRate;
 		
 		monoStreamFormat.mFormatID            = kAudioFormatLinearPCM;
-		monoStreamFormat.mFormatFlags         = kAudioFormatFlagsAudioUnitCanonical;
+		monoStreamFormat.mFormatFlags         = kAudioFormatFlagIsSignedInteger;
 		monoStreamFormat.mBytesPerPacket      = bytesPerSample;
 		monoStreamFormat.mFramesPerPacket     = 1;
 		monoStreamFormat.mBytesPerFrame       = bytesPerSample;
@@ -1127,9 +1145,9 @@ void audioRouteChangeListenerCallback (void*                  inUserData,
 	
     if (existingEntry) {
         
-        NSUInteger slotNumber = [[existingEntry objectForKey:kMemorySlotNumberKey] unsignedIntegerValue];
+        unsigned long slotNumber = [[existingEntry objectForKey:kMemorySlotNumberKey] unsignedIntegerValue];
         
-		NSLog(@"-[TTSoundEngine preloadEffect:] File '%@' already loaded (slot no. %u); Ignoring.", audioFileName, slotNumber);
+		NSLog(@"-[TTSoundEngine preloadEffect:] File '%@' already loaded (slot no. %lu); Ignoring.", audioFileName, slotNumber);
         
         return;
 	}
@@ -1298,22 +1316,22 @@ void audioRouteChangeListenerCallback (void*                  inUserData,
 	
     // Allocate Data Buffers (Deferred until now to simplify abortion)
     
-	data->audioDataLeft = (AudioUnitSampleType*) calloc(totalFramesInFile, sizeof(AudioUnitSampleType));
+	data->audioDataLeft = (SInt32*) calloc(totalFramesInFile, sizeof(SInt32));
 	
 	if (channelCount == 2) {
-		data->audioDataRight = (AudioUnitSampleType*) calloc(totalFramesInFile, sizeof(AudioUnitSampleType));
+		data->audioDataRight = (SInt32*) calloc(totalFramesInFile, sizeof(SInt32));
 	}
 	
 	
     // Setup the AudioBuffer structs in the buffer list
     
 	bufferList->mBuffers[0].mNumberChannels   = 1;
-	bufferList->mBuffers[0].mDataByteSize     = totalFramesInFile * sizeof(AudioUnitSampleType);
+	bufferList->mBuffers[0].mDataByteSize     = totalFramesInFile * sizeof(SInt32);
 	bufferList->mBuffers[0].mData             = data->audioDataLeft;
 	
 	if (channelCount == 2) {
 		bufferList->mBuffers[1].mNumberChannels  = 1;
-		bufferList->mBuffers[1].mDataByteSize    = totalFramesInFile * sizeof (AudioUnitSampleType);
+		bufferList->mBuffers[1].mDataByteSize    = totalFramesInFile * sizeof (SInt32);
 		bufferList->mBuffers[1].mData            = data->audioDataRight;
 	}
 	
@@ -1528,22 +1546,22 @@ void audioRouteChangeListenerCallback (void*                  inUserData,
 	
     // Allocate Audio Data Buffers (Deferred to simplify abortion)
     
-	pSoundData->audioDataLeft = (AudioUnitSampleType*) calloc(totalFramesInFile, sizeof(AudioUnitSampleType));
+	pSoundData->audioDataLeft = (SInt32*) calloc(totalFramesInFile, sizeof(SInt32));
 	
 	if (channelCount == 2) {
-		pSoundData->audioDataRight = (AudioUnitSampleType*) calloc(totalFramesInFile, sizeof(AudioUnitSampleType));
+		pSoundData->audioDataRight = (SInt32*) calloc(totalFramesInFile, sizeof(SInt32));
 	}
 	
 	
     // Setup the AudioBuffer structs in the buffer list
     
 	bufferList->mBuffers[0].mNumberChannels   = 1;
-	bufferList->mBuffers[0].mDataByteSize     = totalFramesInFile * sizeof(AudioUnitSampleType);
+	bufferList->mBuffers[0].mDataByteSize     = totalFramesInFile * sizeof(SInt32);
 	bufferList->mBuffers[0].mData             = pSoundData->audioDataLeft;
 	
 	if (channelCount == 2) {
 		bufferList->mBuffers[1].mNumberChannels  = 1;
-		bufferList->mBuffers[1].mDataByteSize    = totalFramesInFile * sizeof (AudioUnitSampleType);
+		bufferList->mBuffers[1].mDataByteSize    = totalFramesInFile * sizeof (SInt32);
 		bufferList->mBuffers[1].mData            = pSoundData->audioDataRight;
 	}
 	
@@ -1964,6 +1982,10 @@ void audioRouteChangeListenerCallback (void*                  inUserData,
 		// Stop Graph
 		[self stopAUGraph];
 	}
+}
+
+- (void) handleInterruption: (NSNotification*) notification {
+    
 }
 
 // .............................................................................

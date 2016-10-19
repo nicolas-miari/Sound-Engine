@@ -47,8 +47,8 @@ typedef struct tSoundData
 	UInt32					usageCount;		// Number of Active (Playing or Paused)
 											// SoundInstance objects referencing this Data.
 
-	AudioUnitSampleType*	audioDataLeft;	// Left Channel Data
-	AudioUnitSampleType*	audioDataRight;	// Right Channel Data - NULL for mono sounds.
+	SInt32*	audioDataLeft;	// Left Channel Data
+	SInt32*	audioDataRight;	// Right Channel Data - NULL for mono sounds.
 	
 }SoundData;
 

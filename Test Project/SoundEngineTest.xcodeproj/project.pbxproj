@@ -172,6 +172,11 @@
 			attributes = {
 				LastUpgradeCheck = 0510;
 				ORGANIZATIONNAME = "Nicolas Miari";
+				TargetAttributes = {
+					1F8B6B2D18D16B4100CF4C84 = {
+						DevelopmentTeam = D2D4S4F85R;
+					};
+				};
 			};
 			buildConfigurationList = 1F8B6B2918D16B4100CF4C84 /* Build configuration list for PBXProject "SoundEngineTest" */;
 			compatibilityVersion = "Xcode 3.2";
@@ -304,6 +309,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_LAUNCHIMAGE_NAME = LaunchImage;
+				DEVELOPMENT_TEAM = D2D4S4F85R;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "Project Files/Other Sources/SoundEngineTest-Prefix.pch";
 				INFOPLIST_FILE = "Project Files/Config/SoundEngineTest-Info.plist";
@@ -318,6 +324,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_LAUNCHIMAGE_NAME = LaunchImage;
+				DEVELOPMENT_TEAM = D2D4S4F85R;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "Project Files/Other Sources/SoundEngineTest-Prefix.pch";
 				INFOPLIST_FILE = "Project Files/Config/SoundEngineTest-Info.plist";
