@@ -490,17 +490,24 @@ void audioRouteChangeListenerCallback (void*                  inUserData,
 		[session setPreferredIOBufferDuration:_ioBufferDuration error:&audioSessionError];
         
         
-        OSStatus propertySetError = 0;
-        Float32 preferredBufferDuration = _ioBufferDuration;
-        propertySetError = AudioSessionSetProperty(kAudioSessionProperty_PreferredHardwareIOBufferDuration, sizeof(preferredBufferDuration), &preferredBufferDuration);
-
+        //OSStatus propertySetError  = 0;
+        BOOL     propertySetResult = NO;
         
-		if (audioSessionError && propertySetError) { NSLog(@"Error Setting Audio Session Preferred IO Buffer Duration"); return;}
+        Float32 preferredBufferDuration = _ioBufferDuration;
+        
+        //propertySetError = AudioSessionSetProperty(kAudioSessionProperty_PreferredHardwareIOBufferDuration, sizeof(preferredBufferDuration), &preferredBufferDuration);
+        // DEPRECATED!
+        propertySetResult = [session setPreferredIOBufferDuration:preferredBufferDuration error:&audioSessionError];
+        
+		if (audioSessionError || (propertySetResult == NO)) {
+            NSLog(@"Error Setting Audio Session Preferred IO Buffer Duration"); return;
+        }
 
 		AudioSessionAddPropertyListener(kAudioSessionProperty_AudioRouteChange,
                                         audioRouteChangeListenerCallback,
                                         (__bridge void *)(self));
-		
+		// -> TODO: listen to AVAudioSessionRouteChangeNotification
+        
 		
 		// .....................................................................
 		// [ 2 ] Setup MONO and STEREO Stream Formats
@@ -1999,7 +2006,6 @@ void audioRouteChangeListenerCallback (void*                  inUserData,
     static dispatch_once_t onceToken;
     
     dispatch_once(&onceToken, ^{
-        
         sharedInstance = [[TTSoundEngine alloc] init];
     });
     
